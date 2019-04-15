@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <header>
-      <h1>Phoenix Vue</h1>
+      <h1>Mindcrunch</h1>
     </header>
     <main>
       <switch-flow></switch-flow>

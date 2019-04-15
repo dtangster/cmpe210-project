@@ -20,6 +20,12 @@ module.exports = (env, options) => ({
     filename: 'app.js',
     path: path.resolve(__dirname, '../priv/static/js')
   },
+  resolve: {
+    extensions: ['.js', '.vue', '.json', '.css', '.scss', '.styl'],
+    alias: {
+      'vue$': 'vue/dist/vue.esm.js',
+    }
+  },
   module: {
     rules: [
       {

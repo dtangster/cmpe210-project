@@ -1,6 +1,6 @@
 <template>
   <div class="switch-flow">
-    <h3>Hello from Vue.js!</h3>
+    <h3>My future CMPE210 project</h3>
     <p>{{ msg }}</p>
   </div>
 </template>
@@ -10,7 +10,7 @@ export default {
   name: 'switch-flow',
   data() {
     return {
-      msg: 'Simple example using Phoenix, Vue and Webpack.'
+      msg: 'This will eventually show my Switch OpenFlows'
     }
   }
 }
