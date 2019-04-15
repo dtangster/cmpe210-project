@@ -1,7 +1,0 @@
-<section class="switch-stats">
-  <h1><%= gettext "I'm the application UI that speaks with %{controller}", controller: "Ryu" %></h1>
-  <h2>The following are names of the switches connected to your controller:</h2>
-  <%= for name <- @switch_names do %>
-    <p><%= name %></p>
-  <% end %>
-</section>

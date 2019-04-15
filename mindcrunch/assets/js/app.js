@@ -17,4 +17,12 @@ import "phoenix_html"
 // import socket from "./socket"
 
 import Vue from 'vue';
+import App from './vue_components/App.vue'
+
 window.Vue = Vue;
+
+new Vue({
+  el: '#app',
+  template: '<App/>',
+  components: { App }
+})
