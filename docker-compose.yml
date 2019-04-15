@@ -1,30 +1,23 @@
 version: '3'
 services:
-  serene:
-    image: serene:latest
+  mindcrunch:
+    image: mindcrunch
     build:
-      context: serene
-      dockerfile: Dockerfile
+      context: mindcrunch
     privileged: true
-    depends_on:
-      - ryu
     ports:
       - ${PORT:-4000}:4000
   ryu:
-    image: ryu:latest
+    image: ryu
     build:
       context: ryu
-      dockerfile: Dockerfile
     privileged: true
     ports:
       - ${PORT:-8080}:8080
   mininet:
-    image: mininet:latest
+    image: mininet
     build:
       context: mininet
-      dockerfile: Dockerfile
-    depends_on:
-      - ryu
     privileged: true
     environment:
       - CONTROLLER=${CONTROLLER:-ryu}
