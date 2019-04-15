@@ -13,10 +13,11 @@ WORKDIR /opt/mindcrunch/
 RUN mix deps.get \
  && mix deps.compile
 
-COPY assets /opt/mindcrunch/assets
+COPY assets/package.json assets/package-lock.json /opt/mindcrunch/assets/
 RUN cd assets \
  && npm install
 
+COPY assets /opt/mindcrunch/assets
 COPY config /opt/mindcrunch/config
 COPY lib /opt/mindcrunch/lib
 COPY priv /opt/mindcrunch/priv
