@@ -1,0 +1,32 @@
+version: '3'
+services:
+  serene:
+    image: serene:latest
+    build:
+      context: serene
+      dockerfile: Dockerfile
+    privileged: true
+    depends_on:
+      - ryu
+    ports:
+      - ${PORT:-4000}:4000
+  ryu:
+    image: ryu:latest
+    build:
+      context: ryu
+      dockerfile: Dockerfile
+    privileged: true
+    ports:
+      - ${PORT:-8080}:8080
+  mininet:
+    image: mininet:latest
+    build:
+      context: mininet
+      dockerfile: Dockerfile
+    depends_on:
+      - ryu
+    privileged: true
+    environment:
+      - CONTROLLER=${CONTROLLER:-ryu}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
