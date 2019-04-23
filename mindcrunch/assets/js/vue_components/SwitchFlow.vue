@@ -13,6 +13,7 @@
         auto-draw
       ></v-sparkline>
     </v-container>
+    <button @click="appendData(0)">Add</button>
   </div>
 </template>
 
@@ -28,16 +29,24 @@ const gradients = [
 
 export default {
   name: 'switch-flow',
-  data: () => ({
-    width: 2,
-    radius: 10,
-    padding: 8,
-    lineCap: 'round',
-    gradient: gradients[5],
-    value: [0, 2, 5, 9, 5, 10, 3, 5, 0, 0, 1, 8, 2, 9, 0],
-    gradientDirection: 'top',
-    gradients
-  })
+  data: function() {
+    return {
+      width: 2,
+      radius: 10,
+      padding: 8,
+      lineCap: 'round',
+      gradient: gradients[5],
+      value: [0, 2, 5, 9, 5, 10, 3, 5, 0, 0, 1, 8, 2, 9, 0],
+      gradientDirection: 'top',
+      gradients
+    }
+  },
+  methods: {
+    appendData: function(num) {
+      this.value.push(num)
+      this.value.shift()
+    }
+  }
 }
 </script>
 
