@@ -16,10 +16,13 @@ import "phoenix_html"
 // Local files can be imported directly using relative paths, for example:
 // import socket from "./socket"
 
-import Vue from 'vue';
+import Vue from 'vue'
+import Vuetify from 'vuetify'
 import App from './vue_components/App.vue'
 
-window.Vue = Vue;
+window.Vue = Vue
+
+Vue.use(Vuetify)
 
 new Vue({
   el: '#app',
