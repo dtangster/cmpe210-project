@@ -13,7 +13,7 @@
         auto-draw
       ></v-sparkline>
     </v-container>
-    <button @click="appendData(0)">Add</button>
+    <button @click="generateData">Add</button>
   </div>
 </template>
 
@@ -45,6 +45,13 @@ export default {
     appendData: function(num) {
       this.value.push(num)
       this.value.shift()
+    },
+    generateData: function() {
+      var func = this.appendData;
+      setInterval(function() {
+        var randNum = Math.random(0, 10) * 10;
+        func(randNum);
+      }, 1000)
     }
   }
 }
