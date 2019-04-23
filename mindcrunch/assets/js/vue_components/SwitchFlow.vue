@@ -36,7 +36,7 @@ export default {
       padding: 8,
       lineCap: 'round',
       gradient: gradients[5],
-      value: [0, 2, 5, 9, 5, 10, 3, 5, 0, 0, 1, 8, 2, 9, 0],
+      value: new Array(60).fill(0),
       gradientDirection: 'top',
       gradients
     }
