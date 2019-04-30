@@ -21,7 +21,7 @@ defmodule MindcrunchWeb.RoomChannel do
       {:hello, msg} -> msg
     after
       1_000 ->
-        push(socket, "traffic", %{name: "david"})
+        push(socket, "traffic", %{bytes_tx: 10})
         handle_info(:after_join, socket)
     end
     # This will never be hit since the above will be looping

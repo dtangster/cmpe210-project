@@ -35,7 +35,7 @@ export default {
     var appendData = this.appendData;
     let channel = socket.channel("room:lobby", {})
     channel.on('traffic', function(payload) {
-	  appendData(10)
+	  appendData(payload.bytes_tx)
     })
   },
   data: function() {
