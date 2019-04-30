@@ -46,7 +46,6 @@ class SimpleSwitch13(app_manager.RyuApp):
                 bands=bands
             )
 
-            self.logger.info("DAVID WAS HERE")
             datapath.send_msg(req)
 
             #when the traffic generated from h1 will be applied to meter_id=1

@@ -3,6 +3,7 @@ defmodule MindcrunchWeb.RoomChannel do
 
   def join("room:lobby", payload, socket) do
     if authorized?(payload) do
+      send(self(), :after_join)
       {:ok, socket}
     else
       {:error, %{reason: "unauthorized"}}
@@ -15,10 +16,15 @@ defmodule MindcrunchWeb.RoomChannel do
     {:reply, {:ok, payload}, socket}
   end
 
-  # It is also common to receive messages from the client and
-  # broadcast to everyone in the current topic (room:lobby).
-  def handle_in("shout", payload, socket) do
-    broadcast socket, "shout", payload
+  def handle_info(:after_join, socket) do
+    receive do
+      {:hello, msg} -> msg
+    after
+      1_000 ->
+        push(socket, "traffic", %{name: "david"})
+        handle_info(:after_join, socket)
+    end
+    # This will never be hit since the above will be looping
     {:noreply, socket}
   end
 
