@@ -49,6 +49,8 @@ def simple_topology():
     info('*** Starting network\n')
     net.start()
 
+    CLI(net)
+
     while True:
         sleep(5)
 

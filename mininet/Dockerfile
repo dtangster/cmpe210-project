@@ -17,4 +17,5 @@ COPY start.sh topology.py /
 
 RUN service openvswitch-switch start
 
-ENTRYPOINT ["/start.sh"]
+#ENTRYPOINT ["/start.sh"]
+ENTRYPOINT ["sleep", "infinity"]
