@@ -18,6 +18,8 @@
 </template>
 
 <script>
+import socket from '../socket'
+
 const gradients = [
   ['#222'],
   ['#42b3f4'],
@@ -29,6 +31,13 @@ const gradients = [
 
 export default {
   name: 'switch-flow',
+  mounted: function() {
+    var appendData = this.appendData;
+    let channel = socket.channel("room:lobby", {})
+    channel.on('traffic', function(payload) {
+	  appendData(10)
+    })
+  },
   data: function() {
     return {
       width: 2,
@@ -47,10 +56,10 @@ export default {
       this.value.shift()
     },
     generateData: function() {
-      var func = this.appendData;
+      let appendData = this.appendData;
       setInterval(function() {
         var randNum = Math.random(0, 10) * 10;
-        func(randNum);
+        appendData(randNum);
       }, 1000)
     }
   }
