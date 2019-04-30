@@ -2,11 +2,13 @@ FROM python:3.7.2-slim-stretch
 
 ENV MININET_REPO https://github.com/mininet/mininet
 
-RUN apt-get update \
- && apt-get install -y git net-tools iputils-ping dnsutils openvswitch-switch sudo
+RUN echo "deb http://deb.debian.org/debian sid main" >> /etc/apt/sources.list \
+ && apt-get update \
+ && apt-get install -y git net-tools iputils-ping dnsutils openvswitch-switch sudo \
+ && apt-get clean
 
 RUN git clone ${MININET_REPO}
-RUN /mininet/util/install.sh -nfv
+RUN /mininet/util/install.sh -nf
 
 COPY requirements.txt /
 RUN pip install -r requirements.txt
