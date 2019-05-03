@@ -43,6 +43,34 @@ class QoS(SimpleSwitch13, RestStatsApi):
         self.flask = Thread(target=app.run, kwargs={'host': '0.0.0.0'})
         self.flask.start()
 
+    @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
+    def switch_features_handler(self, ev):
+        datapath = ev.msg.datapath
+        dpid = datapath.id
+        ofproto = datapath.ofproto
+        parser = datapath.ofproto_parser
+
+        match = parser.OFPMatch()
+        actions = [parser.OFPActionOutput(ofproto.OFPP_CONTROLLER)]
+
+        self.add_flow(datapath, 0, match, actions)
+
+        bands = [
+            parser.OFPMeterBandDrop(
+                type_=ofproto.OFPMBT_DROP,
+                len_=0, rate=5, burst_size=10
+            )
+        ]
+        req = parser.OFPMeterMod(
+            datapath=datapath,
+            command=ofproto.OFPMC_ADD,
+            flags=ofproto.OFPMF_KBPS,
+            meter_id=dpid,
+            bands=bands
+        )
+
+        datapath.send_msg(req)
+
     def add_flow(self, datapath, priority, match, actions, buffer_id=None, timeout=0):
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
@@ -65,23 +93,6 @@ class QoS(SimpleSwitch13, RestStatsApi):
         out_port = self.mac_to_port[dpid][dst]
         meter_key = (dpid, in_port, src, dst)
 
-        bands = [
-            parser.OFPMeterBandDrop(
-                type_=ofproto.OFPMBT_DROP,
-                len_=0, rate=1, burst_size=10
-            )
-        ]
-        req=parser.OFPMeterMod(
-            datapath=datapath,
-            command=ofproto.OFPMC_ADD,
-            flags=ofproto.OFPMF_KBPS,
-            meter_id=dpid,  # Keep things simple and make the meter id the same as the dpid
-            bands=bands
-        )
-
-        # Add a meter the switch
-        datapath.send_msg(req)
-
         match = parser.OFPMatch(in_port=in_port, eth_src=src, eth_dst=dst)
         actions = [parser.OFPActionOutput(out_port)]
         inst = [
@@ -99,7 +110,7 @@ class QoS(SimpleSwitch13, RestStatsApi):
         self.throttle_info[meter_key]['meter_id'] = dpid
         self.logger.info("Throttle started between %r and %r on dpid %r", src, dst, dpid)
 
-    def should_throttle(self, datapath, in_port, src, dst, timeout=30):
+    def should_throttle(self, datapath, in_port, src, dst, timeout=10):
         current_time = time.time()
         key = (datapath.id, in_port, src, dst)
         if key not in self.throttle_info:
