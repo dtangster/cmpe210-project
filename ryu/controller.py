@@ -1,25 +1,52 @@
+from threading import Thread
 import time
 
+from flask import jsonify, Flask
+import requests
+
 from ryu.app.simple_switch_13 import SimpleSwitch13
+from ryu.app.ofctl_rest import RestStatsApi
 from ryu.base import app_manager
 from ryu.controller import ofp_event
-from ryu.controller.handler import CONFIG_DISPATCHER, MAIN_DISPATCHER
-from ryu.controller.handler import set_ev_cls
+from ryu.controller.handler import CONFIG_DISPATCHER, MAIN_DISPATCHER, set_ev_cls
 from ryu.ofproto import ofproto_v1_3
-from ryu.lib.packet import packet
-from ryu.lib.packet import ethernet
-from ryu.lib.packet import ether_types
+from ryu.lib.packet import ethernet, ether_types, packet
 
 
-class QoS(SimpleSwitch13):
+app = Flask(__name__)
+ACCUMULATOR = 0
+
+@app.route('/')
+def meter_stats():
+    """
+    This function was meant to be an aggregator for flow stats on each switch.
+    Right now we are only grabbing stats from s1 because that is what the demo
+    will involve.
+    """
+    global ACCUMULATOR
+    r = requests.get('http://localhost:8080/stats/flow/1')
+    r.raise_for_status()
+    data = r.json()
+    result = 0
+    tx_bytes = 0
+    for stat in data['1']:
+        if stat['match'].get('dl_src') == '00:00:00:00:00:01':
+            tx_bytes += stat['byte_count']
+    # We need to accomodate the dropping of our rule with the hard timeout
+    result = max(tx_bytes - ACCUMULATOR, 0)
+    ACCUMULATOR = tx_bytes
+    return jsonify({'tx_bytes': result})
+
+
+class QoS(SimpleSwitch13, RestStatsApi):
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
 
     def __init__(self, *args, **kwargs):
         super(SimpleSwitch13, self).__init__(*args, **kwargs)
         self.mac_to_port = {}
         self.throttle_info = {}
-        self.meters = set()
-        self.meter_count = 1  # Increment each time we create a new meter
+        self.flask = Thread(target=app.run, kwargs={'host': '0.0.0.0'})
+        self.flask.start()
 
     def add_flow(self, datapath, priority, match, actions, buffer_id=None, timeout=0):
         ofproto = datapath.ofproto
@@ -41,27 +68,24 @@ class QoS(SimpleSwitch13):
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
         out_port = self.mac_to_port[dpid][dst]
-        meter_key = (datapath.id, in_port, src, dst)
+        meter_key = (dpid, in_port, src, dst)
 
-        if meter_key not in self.meters:
-            bands = [
-                parser.OFPMeterBandDrop(
-                    type_=ofproto.OFPMBT_DROP,
-                    len_=0, rate=100, burst_size=10
-                )
-            ]
-            req=parser.OFPMeterMod(
-                datapath=datapath,
-                command=ofproto.OFPMC_ADD,
-                flags=ofproto.OFPMF_KBPS,
-                meter_id=self.meter_count,
-                bands=bands
+        bands = [
+            parser.OFPMeterBandDrop(
+                type_=ofproto.OFPMBT_DROP,
+                len_=0, rate=100, burst_size=10
             )
+        ]
+        req=parser.OFPMeterMod(
+            datapath=datapath,
+            command=ofproto.OFPMC_ADD,
+            flags=ofproto.OFPMF_KBPS,
+            meter_id=dpid,  # Keep things simple and make the meter id the same as the dpid
+            bands=bands
+        )
 
-            # Add a meter the switch
-            datapath.send_msg(req)
-
-        self.meters.add(meter_key)
+        # Add a meter the switch
+        datapath.send_msg(req)
 
         match = parser.OFPMatch(in_port=in_port, eth_src=src, eth_dst=dst)
         actions = [parser.OFPActionOutput(out_port)]
@@ -77,8 +101,7 @@ class QoS(SimpleSwitch13):
 
         datapath.send_msg(mod)
         self.throttle_info[meter_key]['throttle_started'] = True
-        self.throttle_info[meter_key]['meter_id'] = self.meter_count
-        self.meter_count += 1
+        self.throttle_info[meter_key]['meter_id'] = dpid
         self.logger.info("Throttle started between %r and %r on dpid %r", src, dst, dpid)
 
     def should_throttle(self, datapath, in_port, src, dst, timeout=30):

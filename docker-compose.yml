@@ -14,6 +14,7 @@ services:
     privileged: true
     ports:
       - ${PORT:-8080}:8080
+      - ${PORT:-5000}:5000
   mininet:
     image: mininet
     build:
