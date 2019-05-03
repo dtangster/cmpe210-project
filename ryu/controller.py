@@ -13,6 +13,8 @@ from ryu.ofproto import ofproto_v1_3
 from ryu.lib.packet import ethernet, ether_types, packet
 
 
+LAST_TIME = None
+LAST_BYTES_TX = 0
 app = Flask(__name__)
 
 @app.route('/')
@@ -22,6 +24,7 @@ def meter_stats():
     Right now we are only grabbing stats from s1 because that is what the demo
     will involve.
     """
+    current_time = time.time()
     r = requests.get('http://localhost:8080/stats/flow/1')
     r.raise_for_status()
     data = r.json()
@@ -29,8 +32,15 @@ def meter_stats():
     for stat in data['1']:
         if stat['match'].get('dl_src') == '00:00:00:00:00:01':
             bytes_tx += stat['byte_count']
+    global LAST_TIME
+    global LAST_BYTES_TX
+    time_diff = current_time - LAST_TIME
+    byte_diff = bytes_tx - LAST_BYTES_TX
+    LAST_TIME = current_time
+    LAST_BYTES_TX = bytes_tx
+    transfer_rate = byte_diff / time_diff / 1024
     # We need to accomodate the dropping of our rule with the hard timeout
-    return jsonify({'bytes_tx': bytes_tx})
+    return jsonify({'transfer_rate': transfer_rate})
 
 
 class QoS(SimpleSwitch13, RestStatsApi):
@@ -41,6 +51,8 @@ class QoS(SimpleSwitch13, RestStatsApi):
         self.mac_to_port = {}
         self.throttle_info = {}
         self.flask = Thread(target=app.run, kwargs={'host': '0.0.0.0'})
+        global LAST_TIME
+        LAST_TIME = time.time()
         self.flask.start()
 
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
