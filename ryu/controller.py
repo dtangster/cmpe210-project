@@ -14,7 +14,6 @@ from ryu.lib.packet import ethernet, ether_types, packet
 
 
 app = Flask(__name__)
-ACCUMULATOR = 0
 
 @app.route('/')
 def meter_stats():
@@ -23,19 +22,15 @@ def meter_stats():
     Right now we are only grabbing stats from s1 because that is what the demo
     will involve.
     """
-    global ACCUMULATOR
     r = requests.get('http://localhost:8080/stats/flow/1')
     r.raise_for_status()
     data = r.json()
-    result = 0
     bytes_tx = 0
     for stat in data['1']:
         if stat['match'].get('dl_src') == '00:00:00:00:00:01':
             bytes_tx += stat['byte_count']
     # We need to accomodate the dropping of our rule with the hard timeout
-    result = max(bytes_tx - ACCUMULATOR, 0)
-    ACCUMULATOR = bytes_tx
-    return jsonify({'bytes_tx': result})
+    return jsonify({'bytes_tx': bytes_tx})
 
 
 class QoS(SimpleSwitch13, RestStatsApi):

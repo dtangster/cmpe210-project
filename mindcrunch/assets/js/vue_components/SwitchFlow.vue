@@ -14,6 +14,7 @@
       ></v-sparkline>
     </v-container>
     <button @click="generateData">Add</button>
+    <button @click="clear">Clear</button>
   </div>
 </template>
 
@@ -47,12 +48,25 @@ export default {
       gradient: gradients[5],
       value: new Array(60).fill(0),
       gradientDirection: 'top',
-      gradients
+      gradients,
+      last_value: 0
     }
   },
   methods: {
     appendData: function(num) {
-      this.value.push(num)
+      if (num == null) {
+        return
+      }
+      let bytes_tx = num - this.last_value
+      if (bytes_tx < 0) {
+        console.log("Bytes transferred: ", num)
+        this.value.push(num)
+	  } else {
+        console.log("Bytes transferred: ", bytes_tx)
+        this.value.push(bytes_tx)
+	  }
+      this.last_value = num
+      this.value.push(bytes_tx)
       this.value.shift()
     },
     generateData: function() {
@@ -61,6 +75,10 @@ export default {
         var randNum = Math.random(0, 10) * 10;
         appendData(randNum);
       }, 1000)
+    },
+    clear: function() {
+      console.log("Clearing chart")
+      this.value.fill(0)
     }
   }
 }
