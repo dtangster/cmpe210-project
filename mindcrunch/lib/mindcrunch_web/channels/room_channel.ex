@@ -1,5 +1,8 @@
 defmodule MindcrunchWeb.RoomChannel do
   use MindcrunchWeb, :channel
+  Application.ensure_all_started(:inets)
+  Application.ensure_all_started(:ssl)
+  require Logger
 
   def join("room:lobby", payload, socket) do
     if authorized?(payload) do
@@ -21,7 +24,10 @@ defmodule MindcrunchWeb.RoomChannel do
       {:hello, msg} -> msg
     after
       1_000 ->
-        push(socket, "traffic", %{bytes_tx: 10})
+        {:ok, {{_, 200, 'OK'}, headers, body}} = :httpc.request(:get, {'http://ryu:5000/', []}, [], [])
+		{:ok, data} = Jason.decode(body)
+		IO.inspect(data)
+        push(socket, "traffic", data)
         handle_info(:after_join, socket)
     end
     # This will never be hit since the above will be looping

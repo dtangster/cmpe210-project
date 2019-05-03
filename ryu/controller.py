@@ -28,14 +28,14 @@ def meter_stats():
     r.raise_for_status()
     data = r.json()
     result = 0
-    tx_bytes = 0
+    bytes_tx = 0
     for stat in data['1']:
         if stat['match'].get('dl_src') == '00:00:00:00:00:01':
-            tx_bytes += stat['byte_count']
+            bytes_tx += stat['byte_count']
     # We need to accomodate the dropping of our rule with the hard timeout
-    result = max(tx_bytes - ACCUMULATOR, 0)
-    ACCUMULATOR = tx_bytes
-    return jsonify({'tx_bytes': result})
+    result = max(bytes_tx - ACCUMULATOR, 0)
+    ACCUMULATOR = bytes_tx
+    return jsonify({'bytes_tx': result})
 
 
 class QoS(SimpleSwitch13, RestStatsApi):
@@ -73,7 +73,7 @@ class QoS(SimpleSwitch13, RestStatsApi):
         bands = [
             parser.OFPMeterBandDrop(
                 type_=ofproto.OFPMBT_DROP,
-                len_=0, rate=100, burst_size=10
+                len_=0, rate=1, burst_size=10
             )
         ]
         req=parser.OFPMeterMod(
