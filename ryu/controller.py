@@ -70,7 +70,7 @@ class QoS(SimpleSwitch13, RestStatsApi):
         bands = [
             parser.OFPMeterBandDrop(
                 type_=ofproto.OFPMBT_DROP,
-                len_=0, rate=5, burst_size=10
+                len_=0, rate=200, burst_size=10
             )
         ]
         req = parser.OFPMeterMod(
